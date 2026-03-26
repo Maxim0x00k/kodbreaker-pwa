@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>kodbreaker Macro Builder</title>
+  
+  <link rel="manifest" href="./manifest.json?v=gh1">
+<link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
+  <style>
+    :root{
+      --bg:#050505;
+      --line:#2a2a2a;
+      --line2:#3a3a3a;
+      --text:#f2f2f2;
+      --muted:#9c9c9c;
+      --accent:#cfff00;
+      --danger:#ff6b6b;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background:
+        radial-gradient(900px 380px at 10% -10%, rgba(207,255,0,.05), transparent 60%),
+        radial-gradient(700px 300px at 100% 0%, rgba(255,255,255,.03), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    .wrap{ max-width:1180px; margin:0 auto; padding:14px; }
+
+    .header{
+      border:1px solid var(--line2);
+      background:linear-gradient(180deg, #0a0a0a, #080808);
+      padding:12px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:12px; position:relative;
+      flex-wrap: wrap;
+    }
+    .header::before{
+      content:""; position:absolute; top:0; left:0; right:0; height:1px;
+      background:linear-gradient(90deg, transparent, rgba(207,255,0,.45), transparent);
+      pointer-events:none;
+    }
+    .brand{ display:flex; gap:12px; align-items:center; min-width:0; }
+    .brand-mark{
+      width:34px; height:34px; border:1px solid var(--line2);
+      display:grid; place-items:center; background:#0f0f0f; color:var(--accent);
+      font-family:var(--mono); font-weight:700; letter-spacing:.06em; flex:0 0 auto;
+    }
+    .brand-text{ min-width:0; }
+    .brand-title{
+      margin:0; font-family:var(--mono); font-size:14px; letter-spacing:.08em;
+      text-transform:uppercase; color:#f3f3f3;
+    }
+    .brand-sub{
+      margin-top:4px; color:var(--muted); font-size:11px; font-family:var(--mono);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .status-chip{
+      border:1px solid var(--line2); padding:6px 8px; font-family:var(--mono);
+      font-size:11px; color:#cfcfcf; background:#0a0a0a; white-space:nowrap;
+    }
+    .status-chip b{ color:var(--accent); font-weight:600; }
+
+    .mobile-switch{ display:none; gap:8px; margin-bottom:10px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+      gap:12px;
+    }
+
+    .panel{
+      border:1px solid var(--line2);
+      background:linear-gradient(180deg, #0a0a0a, #080808);
+      min-width:0;
+    }
+    .panel-head{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:10px 10px 8px; border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,0));
+    }
+    .panel-title{
+      margin:0; font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+      text-transform:uppercase; color:#d8d8d8;
+    }
+    .panel-title::before{ content:"> "; color:var(--accent); }
+    .panel-body{ padding:10px; }
+
+    .toolbar{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+
+    button{
+      appearance:none; border:1px solid var(--line2); background:#0e0e0e; color:#eaeaea;
+      padding:8px 10px; font-size:12px; line-height:1; font-family:var(--mono);
+      letter-spacing:.02em; cursor:pointer; transition:background .12s,border-color .12s,color .12s;
+    }
+    button:hover{ border-color:#575757; background:#121212; }
+    button:disabled{ opacity:.45; cursor:not-allowed; }
+
+    .btn-primary{
+      border-color:#5d6f1b; background:rgba(207,255,0,.08); color:var(--accent);
+    }
+    .btn-primary:hover{ border-color:#8aa61b; background:rgba(207,255,0,.13); }
+    .btn-danger{
+      border-color:rgba(255,107,107,.35); color:#ffb1b1; background:rgba(255,107,107,.05);
+    }
+    .btn-danger:hover{ border-color:rgba(255,107,107,.55); background:rgba(255,107,107,.09); }
+    .btn-ghost{ background:transparent; }
+
+    /* KEYPAD STYLES */
+    .pad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      max-width: 320px;
+      margin: 0 auto 12px auto;
+    }
+    .pad-key {
+      aspect-ratio: 1;
+      font-size: 18px;
+      font-family: var(--mono);
+      font-weight: bold;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0a;
+      border: 1px solid var(--line2);
+      transition: all 0.15s;
+      position: relative;
+    }
+    .pad-key:hover { border-color: #555; background: #111; }
+    .pad-key.active {
+      border-color: var(--accent);
+      background: rgba(207,255,0,0.06);
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(207,255,0,0.2);
+    }
+    .pad-key-status {
+      position: absolute;
+      bottom: 6px;
+      display: flex;
+      gap: 4px;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      background: #2a2a2a;
+      border-radius: 50%;
+    }
+    .status-dot.hold { border-radius: 1px; } 
+    .status-dot.has-macro { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
+
+    .action-toggle { display: flex; gap: 8px; margin-bottom: 12px; }
+    .action-toggle button { flex: 1; padding: 10px; font-size: 11px; letter-spacing: 0.05em; }
+
+    .steps{ display:grid; gap:8px; min-height:76px; }
+    .empty{
+      border:1px dashed var(--line2); background:#0a0a0a; color:var(--muted);
+      padding:14px; font-family:var(--mono); font-size:12px; text-align:center;
+    }
+
+    .step{
+      border:1px solid var(--line2); background:#0a0a0a;
+      display:grid; grid-template-columns:34px minmax(0,1fr) auto;
+      gap:8px; padding:8px;
+    }
+    .step:hover{ border-color:#444; }
+
+    .step-num{
+      border:1px solid var(--line); background:#0e0e0e; width:34px; height:34px;
+      display:grid; place-items:center; font-family:var(--mono); font-size:11px; color:#d4d4d4;
+    }
+
+    .step-main{ display:grid; gap:7px; min-width:0; }
+
+    .row{
+      display:grid; grid-template-columns:150px minmax(0,1fr);
+      gap:8px; align-items:center; min-width:0;
+    }
+    .row label{
+      font-family:var(--mono); font-size:11px; color:#bfbfbf;
+      letter-spacing:.04em; text-transform:uppercase;
+    }
+
+    input, select{
+      width:100%; min-width:0; border:1px solid var(--line2); background:#0e0e0e; color:#f2f2f2;
+      padding:8px 9px; font-family:var(--mono); font-size:12px; outline:none;
+    }
+    input::placeholder{ color:#787878; }
+    input:focus, select:focus{
+      border-color:#6f7f2d; box-shadow: inset 0 0 0 1px rgba(207,255,0,.18);
+    }
+
+    .quick-input-wrap{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:6px;
+      min-width:0;
+    }
+    .quick-set-btn{ padding:8px 8px; min-width:52px; }
+
+    .split{
+      display:grid; grid-template-columns:minmax(0,1fr) 90px;
+      gap:8px; min-width:0;
+    }
+
+    .combo-keys{ display:grid; gap:6px; }
+    .combo-key-row{
+      display:grid; grid-template-columns:minmax(0,1fr) auto;
+      gap:6px; min-width:0; align-items:center;
+    }
+    .combo-add{ justify-self:start; }
+
+    .step-actions{ display:flex; flex-direction:column; gap:6px; }
+    .icon-btn{
+      width:30px; height:30px; padding:0; display:grid; place-items:center; font-size:12px; line-height:1;
+    }
+
+    .hint{
+      margin-top:10px; border:1px solid var(--line); background:#0a0a0a;
+      padding:10px; color:#bdbdbd; font-family:var(--mono); font-size:11px; line-height:1.45;
+    }
+    .hint b{ color:#f0f0f0; font-weight:600; }
+    .hint .ok{ color:var(--accent); }
+
+    .stack{ display:grid; gap:10px; }
+    .subpanel{ border:1px solid var(--line); background:#0a0a0a; }
+    .subpanel-head{
+      padding:7px 9px; border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+    }
+    .subpanel-title{
+      margin:0; font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+      text-transform:uppercase; color:#cfcfcf;
+    }
+    .subpanel-title::before{ content:"# "; color:var(--accent); }
+    .subpanel-body{ padding:10px; }
+
+    .preview{ min-height:92px; max-height:290px; overflow:auto; }
+    .preview.human{ font-family:var(--sans); font-size:13px; line-height:1.35; color:#eaeaea; }
+    .preview.human ol{ margin:0; padding-left:18px; }
+    .preview.human li{ margin:5px 0; }
+    .preview.code{
+      white-space:pre-wrap; font-family:var(--mono); font-size:12px; line-height:1.45; color:#ececec;
+      word-break: break-all;
+    }
+    .muted{ color:var(--muted); font-family:var(--mono); font-size:12px; }
+
+    .mobile-panel{ display:none; }
+    @media (max-width: 980px){
+      .row{ grid-template-columns:1fr; }
+      .split{ grid-template-columns:1fr; }
+    }
+    @media (max-width: 700px){
+      .grid{ grid-template-columns:1fr; }
+      .status-chip{ display:none; }
+      .mobile-switch{ display:flex; }
+      .desktop-grid{ display:none; }
+      .mobile-panel{ display:block; }
+      .step{ grid-template-columns:34px minmax(0,1fr); }
+      .step-actions{ grid-column:1 / -1; flex-direction:row; }
+      .toolbar button{ flex:1 1 calc(50% - 6px); }
+      .quick-input-wrap{ grid-template-columns:1fr; }
+      .quick-set-btn{ min-width:0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-mark">KB</div>
+        <div class="brand-text">
+          <h1 class="brand-title">kodbreaker</h1>
+          <div class="brand-sub">build steps → export macro json</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="saveProjectBtn" class="btn-ghost">SAVE PROJECT</button>
+        <button id="loadProjectBtn" class="btn-ghost">LOAD PROJECT</button>
+        <input type="file" id="fileInput" accept=".json" style="display:none;">
+        <div class="status-chip">export: <b>[{"action","args"},...]</b></div>
+      </div>
+    </header>
+
+    <div class="mobile-switch">
+      <button id="mTabBuilder" class="btn-primary">CONSTRUCTOR</button>
+      <button id="mTabResult" class="btn-ghost">RESULT</button>
+    </div>
+
+    <div class="grid desktop-grid">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-head"><h2 class="panel-title">Device Keypad (4x4)</h2></div>
+          <div class="panel-body">
+            <div class="action-toggle">
+              <button id="tabClick" class="btn-primary">CLICK ACTION</button>
+              <button id="tabHold" class="btn-ghost">HOLD ACTION</button>
+            </div>
+            <div id="padGrid" class="pad-grid"></div>
+            <div class="hint" style="text-align:center; margin-top:0;">
+              Выбери кнопку и режим. Все изменения <b>сохраняются автоматически</b>.
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Macro Steps: <span id="currentMacroLabel" style="color:var(--accent)">KEY 1 (CLICK)</span></h2>
+          </div>
+          <div class="panel-body">
+            <div id="steps" class="steps"></div>
+            <div class="toolbar">
+              <button id="addStepBtn" class="btn-primary">+ ADD STEP</button>
+              <button id="quickWaitBtn">WAIT</button>
+              <button id="quickDisplayBtn">DISPLAY</button>
+              <button id="quickFunctionBtn">FUNCTION</button>
+              <button id="quickPresetBtn">PRESET</button>
+              <button id="quickTapBtn">TAP KEY</button>
+              <button id="quickHoldBtn">HOLD KEY</button>
+              <button id="quickComboBtn">KEY COMBO</button>
+              <button id="quickTypeBtn">TYPE TEXT</button>
+              <button id="quickReleaseBtn">RELEASE ALL</button>
+              <button id="clearAllBtn" class="btn-danger">CLEAR</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Output (Current Key)</h2></div>
+        <div class="panel-body">
+          <div class="stack">
+            <div class="subpanel">
+              <div class="subpanel-head"><h3 class="subpanel-title">Human Preview</h3></div>
+              <div class="subpanel-body">
+                <div id="humanPreview" class="preview human"><span class="muted">Добавьте шаги слева.</span></div>
+              </div>
+            </div>
+
+            <div class="subpanel">
+              <div class="subpanel-head">
+                <h3 class="subpanel-title">Macro JSON</h3>
+                <div style="display:flex; gap:6px;">
+                  <button id="importJsonBtn" class="btn-ghost">IMPORT</button>
+                  <button id="copyJsonBtn" class="btn-ghost">COPY</button>
+                </div>
+              </div>
+              <div class="subpanel-body">
+                <div id="jsonPreview" class="preview code"><span class="muted">Здесь появится JSON.</span></div>
+              </div>
+            </div>
+
+            <div class="subpanel">
+              <div class="subpanel-head"><h3 class="subpanel-title">Setup Guide</h3></div>
+              <div class="subpanel-body">
+                <div id="instructionPreview" class="preview human"><span class="muted">Сначала добавьте шаги.</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="mobileBuilderPanel" class="mobile-panel" style="display:none;">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-head"><h2 class="panel-title">Device Keypad</h2></div>
+          <div class="panel-body">
+            <div class="action-toggle">
+              <button id="mTabClick" class="btn-primary">CLICK ACTION</button>
+              <button id="mTabHold" class="btn-ghost">HOLD ACTION</button>
+            </div>
+            <div id="mPadGrid" class="pad-grid"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Steps: <span id="mCurrentMacroLabel" style="color:var(--accent)">KEY 1 (CLICK)</span></h2>
+          </div>
+          <div class="panel-body">
+            <div id="mSteps" class="steps"></div>
+            <div class="toolbar">
+              <button id="mAddStepBtn" class="btn-primary">+ STEP</button>
+              <button id="mQuickPresetBtn">PRESET</button>
+              <button id="mQuickComboBtn">COMBO</button>
+              <button id="mQuickTypeBtn">TEXT</button>
+              <button id="mQuickWaitBtn">WAIT</button>
+              <button id="mQuickDisplayBtn">DISPLAY</button>
+              <button id="mQuickFunctionBtn">FUNC</button>
+              <button id="mClearAllBtn" class="btn-danger">CLEAR</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div id="mobileResultPanel" class="mobile-panel" style="display:none; margin-top:10px;">
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Output</h2></div>
+        <div class="panel-body">
+          <div class="stack">
+            <div class="subpanel">
+              <div class="subpanel-head"><h3 class="subpanel-title">Human Preview</h3></div>
+              <div class="subpanel-body">
+                <div id="mHumanPreview" class="preview human"><span class="muted">Добавьте шаги.</span></div>
+              </div>
+            </div>
+
+            <div class="subpanel">
+              <div class="subpanel-head">
+                <h3 class="subpanel-title">Macro JSON</h3>
+                <div style="display:flex; gap:6px;">
+                  <button id="mImportJsonBtn" class="btn-ghost">IMPORT</button>
+                  <button id="mCopyJsonBtn" class="btn-ghost">COPY</button>
+                </div>
+              </div>
+              <div class="subpanel-body">
+                <div id="mJsonPreview" class="preview code"><span class="muted">Здесь появится JSON.</span></div>
+              </div>
+            </div>
+
+            <div class="subpanel">
+              <div class="subpanel-head"><h3 class="subpanel-title">Setup Guide</h3></div>
+              <div class="subpanel-body">
+                <div id="mInstructionPreview" class="preview human"><span class="muted">Сначала добавьте шаги.</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // KEYCODES
+    // =========================
+    const SPECIAL_KEYCODES = {
+      "Left Ctrl": 128, "Left Shift": 129, "Left Alt": 130, "Left GUI": 131,
+      "Right Ctrl": 132, "Right Shift": 133, "Right Alt": 134, "Right GUI": 135,
+      "Right Arrow": 215, "Left Arrow": 216, "Down Arrow": 217, "Up Arrow": 218,
+      "Backspace": 178, "Tab": 179, "Return / Enter": 176, "Esc": 177,
+      "Insert": 209, "Delete": 212, "Home": 210, "End": 213, "Page Up": 211, "Page Down": 214,
+      "Print Screen": 206, "Caps Lock": 193,
+      "F1": 194, "F2": 195, "F3": 196, "F4": 197, "F5": 198, "F6": 199,
+      "F7": 200, "F8": 201, "F9": 202, "F10": 203, "F11": 204, "F12": 205,
+      "Num 0": 234, "Num 1": 225, "Num 2": 226, "Num 3": 227, "Num 4": 228,
+      "Num 5": 229, "Num 6": 230, "Num 7": 231, "Num 8": 232, "Num 9": 233,
+      "Num /": 220, "Num *": 221, "Num -": 222, "Num +": 223, "Num Enter": 224, "Num .": 235,
+      "Media WWW Home": 32768
+    };
+
+    const ASCII_KEYCODES = {};
+    for (let code = 32; code <= 126; code++) {
+      const ch = String.fromCharCode(code);
+      let label = ch;
+      if (code === 32) label = "Space";
+      ASCII_KEYCODES[`ASCII ${label}`] = code;
+    }
+
+    const ALL_KEYCODES = { ...SPECIAL_KEYCODES, ...ASCII_KEYCODES };
+    const KEY_OPTIONS = Object.keys(ALL_KEYCODES).sort();
+    const FUNCTION_OPTIONS = ["vibrate", "con", "discon", "runweb", "changemode"];
+
+    const PRESET_COMMANDS = [
+      { id: 'spotlight_search', name: 'Spotlight поиск', macro: [{ action:'t', args:'131' }, { action:'t', args:'32' }, { action:'a', args:'' }] },
+      { id: 'screenshot', name: 'Скриншот', macro: [{ action:'t', args:'131' }, { action:'t', args:'129' }, { action:'t', args:'35' }, { action:'a', args:'' }] },
+      { id: 'home', name: 'Домой', macro: [{ action:'t', args:'32768' }, { action:'a', args:'' }] }
+    ];
+
+    function getPresetById(id){ return PRESET_COMMANDS.find(p => p.id === id) || null; }
+
+    // =========================
+    // STATE & STORAGE
+    // =========================
+    const $ = (id) => document.getElementById(id);
+    const isMobile = () => window.innerWidth <= 700;
+    
+    // Новая матрица
+    const PAD_KEYS = ['1','2','3','A', '4','5','6','B', '7','8','9','C', '*','0','#','D'];
+
+    let appData = {};
+    let steps = [];
+    let currentKey = '1';
+    let currentMode = 'click'; // 'click' or 'hold'
+    let mobileTab = "builder";
+
+    function initData() {
+      const saved = localStorage.getItem('kodbreaker_macros');
+      if(saved) {
+        try { appData = JSON.parse(saved); } catch(e){}
+      }
+      PAD_KEYS.forEach(k => {
+        if(!appData[`k${k}_click`]) appData[`k${k}_click`] = [];
+        if(!appData[`k${k}_hold`]) appData[`k${k}_hold`] = [];
+      });
+      loadSteps();
+    }
+
+    function saveData() {
+      appData[`k${currentKey}_${currentMode}`] = steps;
+      localStorage.setItem('kodbreaker_macros', JSON.stringify(appData));
+      renderPad(); 
+    }
+
+    function loadSteps() {
+      steps = appData[`k${currentKey}_${currentMode}`] || [];
+      const label = `KEY ${currentKey} (${currentMode.toUpperCase()})`;
+      $('currentMacroLabel').textContent = label;
+      $('mCurrentMacroLabel').textContent = label;
+      renderSteps(); 
+    }
+
+    function switchKey(k) { currentKey = k; loadSteps(); }
+    function switchMode(m) {
+      currentMode = m;
+      const cClass = m === 'click' ? 'btn-primary' : 'btn-ghost';
+      const hClass = m === 'hold' ? 'btn-primary' : 'btn-ghost';
+      $('tabClick').className = cClass; $('tabHold').className = hClass;
+      $('mTabClick').className = cClass; $('mTabHold').className = hClass;
+      loadSteps();
+    }
+
+    function uid(){ return Math.random().toString(36).slice(2,10); }
+    function escapeHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function toMs(value, unit){
+      const n = Number(value || 0);
+      if (!Number.isFinite(n) || n < 0) return 0;
+      return unit === 's' ? Math.round(n * 1000) : Math.round(n);
+    }
+    function formatMs(ms){ return ms % 1000 === 0 ? `${ms/1000} сек` : `${ms} мс`; }
+
+    // =========================
+    // QUICK RESOLVER
+    // =========================
+    function resolveKeyInput(input){
+      const raw = String(input || '').trim();
+      if (!raw) return null;
+
+      if (/^\d+$/.test(raw)) {
+        const code = parseInt(raw, 10);
+        const customName = `Custom Key [${code}]`;
+        if (ALL_KEYCODES[customName] == null) {
+          ALL_KEYCODES[customName] = code;
+          KEY_OPTIONS.push(customName);
+        }
+        return customName;
+      }
+
+      const aliases = {
+        'CTRL': 'Left Ctrl', 'SHIFT': 'Left Shift', 'ALT': 'Left Alt', 'GUI': 'Left GUI',
+        'CMD': 'Left GUI', 'ENTER': 'Return / Enter', 'TAB': 'Tab', 'ESC': 'Esc',
+        'DEL': 'Delete', 'BACKSPACE': 'Backspace', 'SPACE': 'ASCII Space',
+        'UP': 'Up Arrow', 'DOWN': 'Down Arrow', 'LEFT': 'Left Arrow', 'RIGHT': 'Right Arrow'
+      };
+      const upper = raw.toUpperCase();
+      if (aliases[upper]) return aliases[upper];
+      if (/^F([1-9]|1[0-9]|2[0-4])$/i.test(raw)) return upper;
+      if (raw.length === 1) {
+        const keyName = `ASCII ${raw === ' ' ? 'Space' : raw}`;
+        if (ALL_KEYCODES[keyName] != null) return keyName;
+      }
+      const exact = KEY_OPTIONS.find(k => k.toLowerCase() === raw.toLowerCase());
+      if (exact) return exact;
+      const partial = KEY_OPTIONS.find(k => k.toLowerCase().includes(raw.toLowerCase()));
+      if (partial) return partial;
+      return null;
+    }
+
+    function resolveComboText(input){
+      const parts = String(input || '').split('+').map(s => s.trim()).filter(Boolean);
+      if (!parts.length) return null;
+      const result = [];
+      for (const part of parts) {
+        const resolved = resolveKeyInput(part);
+        if (!resolved) return null;
+        result.push(resolved);
+      }
+      return result.length ? result : null;
+    }
+
+    function createDefaultStep(type='wait'){
+      switch(type){
+        case 'wait': return {id:uid(), type:'wait', value:1, unit:'s'};
+        case 'display': return {id:uid(), type:'display', text:''};
+        case 'function': return {id:uid(), type:'function', fn:'vibrate'};
+        case 'preset': return {id:uid(), type:'preset', presetId: PRESET_COMMANDS[0]?.id || ''};
+        case 'tap': return {id:uid(), type:'tap', key:'Return / Enter', quick:''};
+        case 'hold': return {id:uid(), type:'hold', key:'Left Shift', quick:''};
+        case 'type_text': return {id:uid(), type:'type_text', text:''};
+        case 'releaseall': return {id:uid(), type:'releaseall'};
+        case 'combo': return {id:uid(), type:'combo', keys:['Left Ctrl','ASCII c'], quickCombo:''};
+        default: return {id:uid(), type:'wait', value:1, unit:'s'};
+      }
+    }
+
+    function compileToMacroJson(stepsArr){
+      const out = [];
+      const push = (action, args) => out.push({ action, args: String(args ?? '') });
+
+      for(const step of stepsArr){
+        if(step.type === 'wait'){ push('d', String(toMs(step.value, step.unit))); continue; }
+        if(step.type === 'display'){ push('display', step.text ?? ''); continue; }
+        if(step.type === 'function'){ push('f', step.fn ?? ''); continue; }
+        if(step.type === 'type_text'){ push('p', step.text ?? ''); continue; }
+        if(step.type === 'releaseall'){ push('a', ''); continue; }
+        if(step.type === 'preset'){
+          const preset = getPresetById(step.presetId);
+          if(preset){ for(const item of preset.macro) push(item.action, item.args); }
+          continue;
+        }
+        if(step.type === 'tap' || step.type === 'hold'){
+          const code = ALL_KEYCODES[step.key];
+          if(code != null) push('t', String(code));
+          continue;
+        }
+        if(step.type === 'combo'){
+          const keys = Array.isArray(step.keys) ? step.keys.filter(Boolean) : [];
+          let ok = false;
+          for(const k of keys){
+            const code = ALL_KEYCODES[k];
+            if(code != null){ push('t', String(code)); ok = true; }
+          }
+          if(ok) push('a', '');
+          continue;
+        }
+      }
+      return out;
+    }
+
+    function humanText(step){
+      if(step.type === 'wait') return `Подождать ${formatMs(toMs(step.value, step.unit))}`;
+      if(step.type === 'display') return `Экран: «${step.text || ''}»`;
+      if(step.type === 'function') return `Функция: ${step.fn || ''}`;
+      if(step.type === 'type_text') return `Печать: «${step.text || ''}»`;
+      if(step.type === 'releaseall') return `Отпустить все (a)`;
+      if(step.type === 'preset'){
+        const p = getPresetById(step.presetId);
+        return p ? `Готовая команда: ${p.name}` : `Команда не найдена`;
+      }
+      if(step.type === 'tap') return `Нажать (t): ${step.key}`;
+      if(step.type === 'hold') return `Зажать (t): ${step.key}`;
+      if(step.type === 'combo') return `Сочетание: ${(step.keys||[]).join(' + ')}`;
+      return 'Шаг';
+    }
+
+    function buildInstruction(macro){
+      if(!macro.length) return `<span class="muted">Добавьте шаги.</span>`;
+      const items = macro.map((r) => `<li><b>${escapeHtml(r.action)}</b> → <b>${escapeHtml(r.args)}</b></li>`).join('');
+      return `<ol>${items}</ol>`;
+    }
+
+    function renderPreviews(){
+      const macro = compileToMacroJson(steps);
+      const humanHtml = steps.length
+        ? `<ol>${steps.map(s => `<li>${escapeHtml(humanText(s))}</li>`).join('')}</ol>`
+        : `<span class="muted">Добавьте шаги слева.</span>`;
+      const jsonText = JSON.stringify(macro);
+
+      $('humanPreview').innerHTML = humanHtml;
+      $('jsonPreview').textContent = jsonText;
+      $('instructionPreview').innerHTML = buildInstruction(macro);
+      $('mHumanPreview').innerHTML = humanHtml;
+      $('mJsonPreview').textContent = jsonText;
+      $('mInstructionPreview').innerHTML = buildInstruction(macro);
+    }
+
+    // =========================
+    // RENDER UI
+    // =========================
+    function renderPadInto(containerId) {
+      const grid = $(containerId);
+      if(!grid) return;
+      grid.innerHTML = '';
+      
+      PAD_KEYS.forEach(k => {
+        const btn = document.createElement('button');
+        btn.className = 'pad-key ' + (k === currentKey ? 'active' : '');
+        btn.onclick = () => switchKey(k);
+
+        const num = document.createElement('div');
+        num.textContent = k;
+
+        const dots = document.createElement('div');
+        dots.className = 'pad-key-status';
+
+        const d1 = document.createElement('div');
+        d1.className = 'status-dot ' + (appData[`k${k}_click`].length ? 'has-macro' : '');
+        d1.title = 'Click macro';
+
+        const d2 = document.createElement('div');
+        d2.className = 'status-dot hold ' + (appData[`k${k}_hold`].length ? 'has-macro' : '');
+        d2.title = 'Hold macro';
+
+        dots.append(d1, d2);
+        btn.append(num, dots);
+        grid.appendChild(btn);
+      });
+    }
+
+    function renderPad() {
+      renderPadInto('padGrid');
+      renderPadInto('mPadGrid');
+    }
+
+    function renderSteps(){
+      saveData();
+      renderStepsInto('steps');
+      renderStepsInto('mSteps');
+      renderPreviews();
+      renderMobilePanels();
+    }
+
+    function updateValue(index, field, value) {
+      steps[index][field] = value;
+      saveData();
+      renderPreviews();
+    }
+
+    function makeQuickKeyRow(index, step, main){
+      const rowQuick = document.createElement('div');
+      rowQuick.className = 'row';
+      const lQuick = document.createElement('label'); lQuick.textContent = 'Quick Key';
+      const wrap = document.createElement('div'); wrap.className = 'quick-input-wrap';
+      const inp = document.createElement('input'); inp.type = 'text'; inp.placeholder = 'q / Enter / Ctrl'; inp.value = step.quick || '';
+      const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'quick-set-btn'; btn.textContent = 'SET';
+
+      const apply = () => {
+        const resolved = resolveKeyInput(inp.value);
+        if(resolved){ 
+          steps[index].key = resolved; 
+          steps[index].quick = inp.value; 
+          renderSteps(); 
+        } else { 
+          inp.style.borderColor = 'rgba(255,107,107,.75)'; 
+          setTimeout(() => inp.style.borderColor = '', 800); 
+        }
+      };
+
+      inp.addEventListener('input', () => updateValue(index, 'quick', inp.value));
+      inp.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); apply(); } });
+      btn.addEventListener('click', apply);
+      wrap.append(inp, btn); rowQuick.append(lQuick, wrap); main.appendChild(rowQuick);
+    }
+
+    function makeQuickComboRow(index, step, main){
+      const rowQuick = document.createElement('div');
+      rowQuick.className = 'row';
+      const lQuick = document.createElement('label'); lQuick.textContent = 'Quick Combo';
+      const wrap = document.createElement('div'); wrap.className = 'quick-input-wrap';
+      const inp = document.createElement('input'); inp.type = 'text'; inp.placeholder = 'Ctrl+q / Alt+Enter'; inp.value = step.quickCombo || '';
+      const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'quick-set-btn'; btn.textContent = 'SET';
+
+      const apply = () => {
+        const resolved = resolveComboText(inp.value);
+        if(resolved){ 
+          steps[index].keys = resolved; 
+          steps[index].quickCombo = inp.value; 
+          renderSteps(); 
+        } else { 
+          inp.style.borderColor = 'rgba(255,107,107,.75)'; 
+          setTimeout(() => inp.style.borderColor = '', 800); 
+        }
+      };
+
+      inp.addEventListener('input', () => updateValue(index, 'quickCombo', inp.value));
+      inp.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); apply(); } });
+      btn.addEventListener('click', apply);
+      wrap.append(inp, btn); rowQuick.append(lQuick, wrap); main.appendChild(rowQuick);
+    }
+
+    function renderStepsInto(targetId){
+      const root = $(targetId);
+      if(!root) return;
+      root.innerHTML = '';
+
+      if(!steps.length){
+        root.innerHTML = `<div class="empty">В режиме ${currentMode.toUpperCase()} для кнопки ${currentKey} нет макросов. Нажмите “+ ADD STEP” в панели ниже.</div>`;
+        return;
+      }
+
+      steps.forEach((step, index) => {
+        const item = document.createElement('div'); item.className = 'step';
+        const num = document.createElement('div'); num.className = 'step-num'; num.textContent = String(index + 1).padStart(2, '0');
+        const main = document.createElement('div'); main.className = 'step-main';
+
+        const rowType = document.createElement('div'); rowType.className = 'row';
+        const lType = document.createElement('label'); lType.textContent = 'Action';
+        const selType = document.createElement('select');
+
+        const types = [
+          ['wait', 'WAIT (d)'], ['display', 'DISPLAY'], ['function', 'FUNCTION (f)'],
+          ['preset', 'PRESET COMMAND'], ['tap', 'TAP KEY (t)'], ['hold', 'HOLD KEY (t)'],
+          ['combo', 'KEY COMBO'], ['type_text', 'TYPE TEXT (p)'], ['releaseall', 'RELEASE ALL (a)']
+        ];
+        types.forEach(([v,t]) => {
+          const o = document.createElement('option');
+          o.value = v; o.textContent = t;
+          if(step.type === v) o.selected = true;
+          selType.appendChild(o);
+        });
+
+        selType.addEventListener('change', () => { steps[index] = createDefaultStep(selType.value); renderSteps(); });
+        rowType.append(lType, selType); main.appendChild(rowType);
+
+        if(step.type === 'wait'){
+          const row = document.createElement('div'); row.className = 'row';
+          const l = document.createElement('label'); l.textContent = 'Delay';
+          const split = document.createElement('div'); split.className = 'split';
+
+          const inp = document.createElement('input'); inp.type = 'number'; inp.min = '0'; inp.step = '0.1'; inp.value = step.value ?? 1;
+          inp.addEventListener('input', () => updateValue(index, 'value', inp.value));
+
+          const unit = document.createElement('select');
+          [['s','SEC'],['ms','MS']].forEach(([v,t])=>{
+            const o=document.createElement('option'); o.value=v; o.textContent=t; if(step.unit===v) o.selected=true; unit.appendChild(o);
+          });
+          unit.addEventListener('change', () => updateValue(index, 'unit', unit.value));
+          split.append(inp, unit); row.append(l, split); main.appendChild(row);
+        }
+
+        if(step.type === 'display'){
+          const row = document.createElement('div'); row.className = 'row';
+          const l = document.createElement('label'); l.textContent = 'Display';
+          const inp = document.createElement('input'); inp.type='text'; inp.value = step.text || '';
+          inp.addEventListener('input', () => updateValue(index, 'text', inp.value));
+          row.append(l, inp); main.appendChild(row);
+        }
+
+        if(step.type === 'function'){
+          const row = document.createElement('div'); row.className='row';
+          const l = document.createElement('label'); l.textContent='Function';
+          const sel = document.createElement('select');
+          FUNCTION_OPTIONS.forEach(fn=>{
+            const o=document.createElement('option'); o.value=fn; o.textContent=fn; if(step.fn===fn) o.selected=true; sel.appendChild(o);
+          });
+          sel.addEventListener('change', () => updateValue(index, 'fn', sel.value));
+          row.append(l, sel); main.appendChild(row);
+        }
+
+        if(step.type === 'preset'){
+          const row = document.createElement('div'); row.className='row';
+          const l = document.createElement('label'); l.textContent='Preset';
+          const sel = document.createElement('select');
+          PRESET_COMMANDS.forEach(p=>{
+            const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; if(step.presetId===p.id) o.selected=true; sel.appendChild(o);
+          });
+          sel.addEventListener('change', () => updateValue(index, 'presetId', sel.value));
+          row.append(l, sel); main.appendChild(row);
+        }
+
+        if(step.type === 'tap' || step.type === 'hold'){
+          makeQuickKeyRow(index, step, main);
+          const row = document.createElement('div'); row.className='row';
+          const l = document.createElement('label'); l.textContent='Key';
+          const sel = document.createElement('select');
+          KEY_OPTIONS.forEach(k=>{
+            const o=document.createElement('option'); o.value=k; o.textContent=`${k} [${ALL_KEYCODES[k]}]`; if(step.key===k) o.selected=true; sel.appendChild(o);
+          });
+          sel.addEventListener('change', () => updateValue(index, 'key', sel.value));
+          row.append(l, sel); main.appendChild(row);
+        }
+
+        if(step.type === 'type_text'){
+          const row = document.createElement('div'); row.className='row';
+          const l = document.createElement('label'); l.textContent='Text (print)';
+          const inp = document.createElement('input'); inp.type='text'; inp.value = step.text || '';
+          inp.addEventListener('input', () => updateValue(index, 'text', inp.value));
+          row.append(l, inp); main.appendChild(row);
+        }
+
+        if(step.type === 'combo'){
+          makeQuickComboRow(index, step, main);
+          const row = document.createElement('div'); row.className='row';
+          const l = document.createElement('label'); l.textContent='Combo Keys';
+          const wrap = document.createElement('div'); wrap.className='combo-keys';
+          if(!Array.isArray(step.keys) || !step.keys.length) step.keys = ['Left Ctrl','ASCII c'];
+
+          step.keys.forEach((keyName, keyIndex)=>{
+            const keyRow = document.createElement('div'); keyRow.className='combo-key-row';
+            const sel = document.createElement('select');
+            KEY_OPTIONS.forEach(k=>{
+              const o=document.createElement('option'); o.value=k; o.textContent=`${k} [${ALL_KEYCODES[k]}]`; if(keyName===k) o.selected=true; sel.appendChild(o);
+            });
+            sel.addEventListener('change', () => { steps[index].keys[keyIndex] = sel.value; renderSteps(); });
+
+            const delBtn = document.createElement('button'); delBtn.type='button'; delBtn.className='btn-danger'; delBtn.textContent='DEL'; delBtn.style.padding='7px 8px';
+            delBtn.disabled = (steps[index].keys.length <= 2);
+            delBtn.addEventListener('click', ()=>{ if(steps[index].keys.length <= 2) return; steps[index].keys.splice(keyIndex,1); renderSteps(); });
+            keyRow.append(sel, delBtn); wrap.appendChild(keyRow);
+          });
+
+          const addBtn = document.createElement('button'); addBtn.type='button'; addBtn.className='combo-add'; addBtn.textContent='+ ADD KEY';
+          addBtn.addEventListener('click', ()=>{ steps[index].keys.push('Return / Enter'); renderSteps(); });
+          wrap.appendChild(addBtn); row.append(l, wrap); main.appendChild(row);
+        }
+
+        const actions = document.createElement('div'); actions.className='step-actions';
+        const up = document.createElement('button'); up.className='icon-btn'; up.textContent='↑'; up.disabled=(index===0);
+        up.onclick=()=>{ [steps[index-1],steps[index]]=[steps[index],steps[index-1]]; renderSteps(); };
+        const down = document.createElement('button'); down.className='icon-btn'; down.textContent='↓'; down.disabled=(index===steps.length-1);
+        down.onclick=()=>{ [steps[index+1],steps[index]]=[steps[index],steps[index+1]]; renderSteps(); };
+        const dup = document.createElement('button'); dup.className='icon-btn'; dup.textContent='⧉';
+        dup.onclick=()=>{ const c=JSON.parse(JSON.stringify(steps[index])); c.id=uid(); steps.splice(index+1,0,c); renderSteps(); };
+        const del = document.createElement('button'); del.className='icon-btn btn-danger'; del.textContent='×';
+        del.onclick=()=>{ steps.splice(index,1); renderSteps(); };
+
+        actions.append(up,down,dup,del); item.append(num,main,actions); root.appendChild(item);
+      });
+    }
+
+    function renderMobilePanels(){
+      if(!isMobile()){ $('mobileBuilderPanel').style.display='none'; $('mobileResultPanel').style.display='none'; return; }
+      $('mobileBuilderPanel').style.display = mobileTab==='builder' ? 'block':'none';
+      $('mobileResultPanel').style.display = mobileTab==='result' ? 'block':'none';
+      $('mTabBuilder').className = mobileTab==='builder' ? 'btn-primary':'btn-ghost';
+      $('mTabResult').className = mobileTab==='result' ? 'btn-primary':'btn-ghost';
+    }
+
+    // =========================
+    // ACTIONS & EVENTS
+    // =========================
+    function addStep(type='wait'){ steps.push(createDefaultStep(type)); renderSteps(); }
+    function clearAll(){
+      if(!steps.length) return;
+      if(confirm(`Удалить все шаги для Кнопки ${currentKey} (${currentMode.toUpperCase()})?`)){ steps=[]; renderSteps(); }
+    }
+
+    async function copyJson(isMobileCopy=false){
+      const el = isMobileCopy ? $('mJsonPreview') : $('jsonPreview');
+      const text = (el.textContent || '').trim();
+      if(!text || text.startsWith('Здесь появится') || text === "[]") return alert('Сначала добавьте шаги.');
+      try{ await navigator.clipboard.writeText(text); }
+      catch(e){ alert('Не удалось скопировать.'); }
+    }
+
+    function importJson() {
+      const input = prompt("Вставьте JSON макроса для импорта в текущую кнопку\n(Внимание: текущие шаги будут заменены!):");
+      if(!input) return;
+      try {
+        const parsed = JSON.parse(input);
+        if(!Array.isArray(parsed)) throw new Error("JSON должен быть массивом");
+        
+        const newSteps = [];
+        let i = 0;
+        while(i < parsed.length) {
+          const item = parsed[i];
+          const act = item.action;
+          const arg = item.args;
+          
+          if(act === 'd') {
+            const ms = parseInt(arg, 10) || 0;
+            if (ms > 0 && ms % 1000 === 0) {
+                newSteps.push({ id:uid(), type:'wait', value: ms/1000, unit:'s' });
+            } else {
+                newSteps.push({ id:uid(), type:'wait', value: ms, unit:'ms' });
+            }
+            i++;
+          } else if(act === 'display') {
+            newSteps.push({ id:uid(), type:'display', text: arg }); i++;
+          } else if(act === 'f') {
+            newSteps.push({ id:uid(), type:'function', fn: arg }); i++;
+          } else if(act === 'p') {
+            newSteps.push({ id:uid(), type:'type_text', text: arg }); i++;
+          } else if(act === 'a') {
+            newSteps.push({ id:uid(), type:'releaseall' }); i++;
+          } else if(act === 't') {
+            // Детектор комбинаций клавиш (combo)
+            let j = i;
+            let keys = [];
+            while(j < parsed.length && parsed[j].action === 't') {
+              let keyName = Object.keys(ALL_KEYCODES).find(k => ALL_KEYCODES[k] == parsed[j].args);
+              if (!keyName) {
+                keyName = `Custom Key [${parsed[j].args}]`;
+                ALL_KEYCODES[keyName] = parseInt(parsed[j].args, 10);
+                if(!KEY_OPTIONS.includes(keyName)) KEY_OPTIONS.push(keyName);
+              }
+              keys.push(keyName);
+              j++;
+            }
+            // Если после серии нажатий идёт "a" (release) - это combo
+            if (j < parsed.length && parsed[j].action === 'a' && keys.length > 1) {
+              newSteps.push({ id:uid(), type:'combo', keys: keys, quickCombo: '' });
+              i = j + 1; // Пропускаем отпускание 'a'
+            } else {
+              // Иначе это просто одиночный тап
+              let keyName = keys[0];
+              newSteps.push({ id:uid(), type:'tap', key: keyName, quick: '' });
+              i++;
+            }
+          } else {
+            i++; // Пропускаем неизвестные экшены
+          }
+        }
+        
+        steps = newSteps;
+        renderSteps();
+      } catch (e) {
+        alert("Ошибка импорта! Проверьте формат вставленного JSON.");
+        console.error(e);
+      }
+    }
+
+    // PROJECT SAVE / LOAD ACTIONS
+    $('saveProjectBtn').onclick = () => {
+      const data = localStorage.getItem('kodbreaker_macros') || '{}';
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const date = new Date().toISOString().split('T')[0];
+      a.download = `kb_backup_${date}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    $('loadProjectBtn').onclick = () => $('fileInput').click();
+
+    $('fileInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const content = ev.target.result;
+          JSON.parse(content); // валидация структуры JSON
+          localStorage.setItem('kodbreaker_macros', content);
+          location.reload();
+        } catch (err) {
+          alert("Ошибка при загрузке проекта! Файл поврежден или имеет неверный формат.");
+        }
+      };
+      reader.readAsText(file);
+      // Сброс input, чтобы можно было загрузить тот же файл еще раз, если потребуется
+      e.target.value = '';
+    };
+
+    $('addStepBtn').onclick = () => addStep('wait'); $('quickWaitBtn').onclick = () => addStep('wait');
+    $('quickDisplayBtn').onclick = () => addStep('display'); $('quickFunctionBtn').onclick = () => addStep('function');
+    $('quickPresetBtn').onclick = () => addStep('preset'); $('quickTapBtn').onclick = () => addStep('tap');
+    $('quickHoldBtn').onclick = () => addStep('hold'); $('quickComboBtn').onclick = () => addStep('combo');
+    $('quickTypeBtn').onclick = () => addStep('type_text'); $('quickReleaseBtn').onclick = () => addStep('releaseall');
+    $('clearAllBtn').onclick = clearAll;
+
+    $('mAddStepBtn').onclick = () => addStep('wait'); $('mQuickPresetBtn').onclick = () => addStep('preset');
+    $('mQuickComboBtn').onclick = () => addStep('combo'); $('mQuickTypeBtn').onclick = () => addStep('type_text');
+    $('mQuickWaitBtn').onclick = () => addStep('wait'); $('mQuickDisplayBtn').onclick = () => addStep('display');
+    $('mQuickFunctionBtn').onclick = () => addStep('function'); $('mClearAllBtn').onclick = clearAll;
+
+    $('copyJsonBtn').onclick = () => copyJson(false); $('mCopyJsonBtn').onclick = () => copyJson(true);
+    
+    // Новые листенеры для кнопок импорта
+    $('importJsonBtn').onclick = importJson;
+    $('mImportJsonBtn').onclick = importJson;
+
+    $('tabClick').onclick = () => switchMode('click'); $('tabHold').onclick = () => switchMode('hold');
+    $('mTabClick').onclick = () => switchMode('click'); $('mTabHold').onclick = () => switchMode('hold');
+
+    $('mTabBuilder').onclick = () => { mobileTab='builder'; renderMobilePanels(); };
+    $('mTabResult').onclick = () => { mobileTab='result'; renderMobilePanels(); };
+
+    window.addEventListener('resize', renderMobilePanels);
+
+    // INIT
+    initData();
+
+// --- PWA SERVICE WORKER REGISTRATION ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker зарегистрирован!', reg.scope))
+          .catch(err => console.error('Ошибка регистрации Service Worker:', err));
+      });
+    }
+
+  </script>
+</body>
+</html>
