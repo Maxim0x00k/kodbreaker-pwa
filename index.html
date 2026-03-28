@@ -6,7 +6,12 @@
   <title>kodbreaker Macro Builder</title>
   
   <link rel="manifest" href="./manifest.json?v=gh1">
-<link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
+  <meta name="theme-color" content="#050505">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="kodbreaker">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png">
+
   <style>
     :root{
       --bg:#050505;
@@ -313,7 +318,7 @@
             </div>
             <div id="padGrid" class="pad-grid"></div>
             <div class="hint" style="text-align:center; margin-top:0;">
-              Выбери кнопку и режим. Все изменения <b>сохраняются автоматически</b>.
+              Наведи на кнопку, чтобы увидеть её название.
             </div>
           </div>
         </section>
@@ -323,6 +328,11 @@
             <h2 class="panel-title">Macro Steps: <span id="currentMacroLabel" style="color:var(--accent)">KEY 1 (CLICK)</span></h2>
           </div>
           <div class="panel-body">
+            <div class="row" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line2);">
+              <label>Имя макроса</label>
+              <input type="text" id="macroName" placeholder="Введи понятное название (например: Открыть YouTube)">
+            </div>
+
             <div id="steps" class="steps"></div>
             <div class="toolbar">
               <button id="addStepBtn" class="btn-primary">+ ADD STEP</button>
@@ -394,6 +404,11 @@
             <h2 class="panel-title">Steps: <span id="mCurrentMacroLabel" style="color:var(--accent)">KEY 1 (CLICK)</span></h2>
           </div>
           <div class="panel-body">
+            <div class="row" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line2);">
+              <label>Имя макроса</label>
+              <input type="text" id="mMacroName" placeholder="Введи понятное название...">
+            </div>
+
             <div id="mSteps" class="steps"></div>
             <div class="toolbar">
               <button id="mAddStepBtn" class="btn-primary">+ STEP</button>
@@ -448,6 +463,14 @@
   </div>
 
   <script>
+    // --- PWA SERVICE WORKER REGISTRATION ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .catch(err => console.error('Ошибка регистрации Service Worker:', err));
+      });
+    }
+
     // =========================
     // KEYCODES
     // =========================
@@ -492,7 +515,6 @@
     const $ = (id) => document.getElementById(id);
     const isMobile = () => window.innerWidth <= 700;
     
-    // Новая матрица
     const PAD_KEYS = ['1','2','3','A', '4','5','6','B', '7','8','9','C', '*','0','#','D'];
 
     let appData = {};
@@ -521,11 +543,29 @@
 
     function loadSteps() {
       steps = appData[`k${currentKey}_${currentMode}`] || [];
+      
+      // Загрузка названия макроса
+      const savedName = appData[`k${currentKey}_${currentMode}_name`] || '';
+      $('macroName').value = savedName;
+      $('mMacroName').value = savedName;
+
       const label = `KEY ${currentKey} (${currentMode.toUpperCase()})`;
       $('currentMacroLabel').textContent = label;
       $('mCurrentMacroLabel').textContent = label;
+      
       renderSteps(); 
     }
+
+    // Сохранение названия макроса по мере ввода
+    function updateMacroName(val) {
+      appData[`k${currentKey}_${currentMode}_name`] = val;
+      $('macroName').value = val;
+      $('mMacroName').value = val;
+      saveData();
+    }
+    
+    $('macroName').addEventListener('input', (e) => updateMacroName(e.target.value));
+    $('mMacroName').addEventListener('input', (e) => updateMacroName(e.target.value));
 
     function switchKey(k) { currentKey = k; loadSteps(); }
     function switchMode(m) {
@@ -694,6 +734,11 @@
         btn.className = 'pad-key ' + (k === currentKey ? 'active' : '');
         btn.onclick = () => switchKey(k);
 
+        // Навешиваем title для подсказки при наведении
+        const clickName = appData[`k${k}_click_name`] || 'Нет макроса';
+        const holdName = appData[`k${k}_hold_name`] || 'Нет макроса';
+        btn.title = `КЛИК: ${clickName}\nЗАЖАТИЕ: ${holdName}`;
+
         const num = document.createElement('div');
         num.textContent = k;
 
@@ -702,11 +747,9 @@
 
         const d1 = document.createElement('div');
         d1.className = 'status-dot ' + (appData[`k${k}_click`].length ? 'has-macro' : '');
-        d1.title = 'Click macro';
 
         const d2 = document.createElement('div');
         d2.className = 'status-dot hold ' + (appData[`k${k}_hold`].length ? 'has-macro' : '');
-        d2.title = 'Hold macro';
 
         dots.append(d1, d2);
         btn.append(num, dots);
@@ -994,18 +1037,16 @@
               keys.push(keyName);
               j++;
             }
-            // Если после серии нажатий идёт "a" (release) - это combo
             if (j < parsed.length && parsed[j].action === 'a' && keys.length > 1) {
               newSteps.push({ id:uid(), type:'combo', keys: keys, quickCombo: '' });
-              i = j + 1; // Пропускаем отпускание 'a'
+              i = j + 1; 
             } else {
-              // Иначе это просто одиночный тап
               let keyName = keys[0];
               newSteps.push({ id:uid(), type:'tap', key: keyName, quick: '' });
               i++;
             }
           } else {
-            i++; // Пропускаем неизвестные экшены
+            i++; 
           }
         }
         
@@ -1049,7 +1090,6 @@
         }
       };
       reader.readAsText(file);
-      // Сброс input, чтобы можно было загрузить тот же файл еще раз, если потребуется
       e.target.value = '';
     };
 
@@ -1067,7 +1107,6 @@
 
     $('copyJsonBtn').onclick = () => copyJson(false); $('mCopyJsonBtn').onclick = () => copyJson(true);
     
-    // Новые листенеры для кнопок импорта
     $('importJsonBtn').onclick = importJson;
     $('mImportJsonBtn').onclick = importJson;
 
@@ -1079,18 +1118,7 @@
 
     window.addEventListener('resize', renderMobilePanels);
 
-    // INIT
     initData();
-
-// --- PWA SERVICE WORKER REGISTRATION ---
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('Service Worker зарегистрирован!', reg.scope))
-          .catch(err => console.error('Ошибка регистрации Service Worker:', err));
-      });
-    }
-
   </script>
 </body>
 </html>
