@@ -329,8 +329,8 @@
           </div>
           <div class="panel-body">
             <div class="row" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line2);">
-              <label>Macros name</label>
-              <input type="text" id="macroName" placeholder="type description of macros">
+              <label>Имя макроса</label>
+              <input type="text" id="macroName" placeholder="Введи понятное название (например: Открыть YouTube)">
             </div>
 
             <div id="steps" class="steps"></div>
@@ -405,8 +405,8 @@
           </div>
           <div class="panel-body">
             <div class="row" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line2);">
-              <label>Macros name</label>
-              <input type="text" id="mMacroName" placeholder="Type name of macros">
+              <label>Имя макроса</label>
+              <input type="text" id="mMacroName" placeholder="Введи понятное название...">
             </div>
 
             <div id="mSteps" class="steps"></div>
@@ -463,7 +463,6 @@
   </div>
 
   <script>
-    // --- PWA SERVICE WORKER REGISTRATION ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
@@ -471,9 +470,6 @@
       });
     }
 
-    // =========================
-    // KEYCODES
-    // =========================
     const SPECIAL_KEYCODES = {
       "Left Ctrl": 128, "Left Shift": 129, "Left Alt": 130, "Left GUI": 131,
       "Right Ctrl": 132, "Right Shift": 133, "Right Alt": 134, "Right GUI": 135,
@@ -509,9 +505,6 @@
 
     function getPresetById(id){ return PRESET_COMMANDS.find(p => p.id === id) || null; }
 
-    // =========================
-    // STATE & STORAGE
-    // =========================
     const $ = (id) => document.getElementById(id);
     const isMobile = () => window.innerWidth <= 700;
     
@@ -520,13 +513,42 @@
     let appData = {};
     let steps = [];
     let currentKey = '1';
-    let currentMode = 'click'; // 'click' or 'hold'
+    let currentMode = 'click'; 
     let mobileTab = "builder";
+
+    // --- NEW: ФУНКЦИЯ ДЛЯ ВОССТАНОВЛЕНИЯ КАСТОМНЫХ КНОПОК ПРИ ПЕРЕЗАГРУЗКЕ ---
+    function restoreCustomKeys(dataObj) {
+      if (!dataObj) return;
+      Object.keys(dataObj).forEach(k => {
+        if (Array.isArray(dataObj[k])) {
+          dataObj[k].forEach(step => {
+            if (step.type === 'tap' || step.type === 'hold') {
+              ensureKey(step.key);
+            } else if (step.type === 'combo' && Array.isArray(step.keys)) {
+              step.keys.forEach(ensureKey);
+            }
+          });
+        }
+      });
+      KEY_OPTIONS.sort();
+    }
+
+    function ensureKey(keyName) {
+      if (!keyName || ALL_KEYCODES[keyName] != null) return;
+      const match = keyName.match(/\[(\d+)\]/);
+      if (match) {
+        ALL_KEYCODES[keyName] = parseInt(match[1], 10);
+        if (!KEY_OPTIONS.includes(keyName)) KEY_OPTIONS.push(keyName);
+      }
+    }
 
     function initData() {
       const saved = localStorage.getItem('kodbreaker_macros');
       if(saved) {
-        try { appData = JSON.parse(saved); } catch(e){}
+        try { 
+          appData = JSON.parse(saved); 
+          restoreCustomKeys(appData); // ВОТ ТУТ МЫ ВОССТАНАВЛИВАЕМ КЛЮЧИ
+        } catch(e){}
       }
       PAD_KEYS.forEach(k => {
         if(!appData[`k${k}_click`]) appData[`k${k}_click`] = [];
@@ -544,7 +566,6 @@
     function loadSteps() {
       steps = appData[`k${currentKey}_${currentMode}`] || [];
       
-      // Загрузка названия макроса
       const savedName = appData[`k${currentKey}_${currentMode}_name`] || '';
       $('macroName').value = savedName;
       $('mMacroName').value = savedName;
@@ -556,7 +577,6 @@
       renderSteps(); 
     }
 
-    // Сохранение названия макроса по мере ввода
     function updateMacroName(val) {
       appData[`k${currentKey}_${currentMode}_name`] = val;
       $('macroName').value = val;
@@ -586,9 +606,6 @@
     }
     function formatMs(ms){ return ms % 1000 === 0 ? `${ms/1000} сек` : `${ms} мс`; }
 
-    // =========================
-    // QUICK RESOLVER
-    // =========================
     function resolveKeyInput(input){
       const raw = String(input || '').trim();
       if (!raw) return null;
@@ -721,9 +738,6 @@
       $('mInstructionPreview').innerHTML = buildInstruction(macro);
     }
 
-    // =========================
-    // RENDER UI
-    // =========================
     function renderPadInto(containerId) {
       const grid = $(containerId);
       if(!grid) return;
@@ -734,7 +748,6 @@
         btn.className = 'pad-key ' + (k === currentKey ? 'active' : '');
         btn.onclick = () => switchKey(k);
 
-        // Навешиваем title для подсказки при наведении
         const clickName = appData[`k${k}_click_name`] || 'Нет макроса';
         const holdName = appData[`k${k}_hold_name`] || 'Нет макроса';
         btn.title = `КЛИК: ${clickName}\nЗАЖАТИЕ: ${holdName}`;
@@ -976,9 +989,6 @@
       $('mTabResult').className = mobileTab==='result' ? 'btn-primary':'btn-ghost';
     }
 
-    // =========================
-    // ACTIONS & EVENTS
-    // =========================
     function addStep(type='wait'){ steps.push(createDefaultStep(type)); renderSteps(); }
     function clearAll(){
       if(!steps.length) return;
@@ -1024,7 +1034,6 @@
           } else if(act === 'a') {
             newSteps.push({ id:uid(), type:'releaseall' }); i++;
           } else if(act === 't') {
-            // Детектор комбинаций клавиш (combo)
             let j = i;
             let keys = [];
             while(j < parsed.length && parsed[j].action === 't') {
@@ -1058,7 +1067,6 @@
       }
     }
 
-    // PROJECT SAVE / LOAD ACTIONS
     $('saveProjectBtn').onclick = () => {
       const data = localStorage.getItem('kodbreaker_macros') || '{}';
       const blob = new Blob([data], { type: 'application/json' });
@@ -1082,7 +1090,7 @@
       reader.onload = (ev) => {
         try {
           const content = ev.target.result;
-          JSON.parse(content); // валидация структуры JSON
+          JSON.parse(content);
           localStorage.setItem('kodbreaker_macros', content);
           location.reload();
         } catch (err) {
